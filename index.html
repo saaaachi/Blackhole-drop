@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v2.7</title>
+    <title>Blackhole Drop v2.8</title>
     <style>
         * { box-sizing: border-box; }
         html, body {
@@ -21,7 +21,7 @@
         #ad-bottom { bottom: 0; }
         iframe { border: none; width: 100%; height: 100%; }
 
-        /* ゲーム可視エリア */
+        /* ゲームエリア */
         #game-outer {
             position: absolute;
             top: 150px; bottom: 150px; left: 0; right: 0;
@@ -30,49 +30,47 @@
 
         canvas { display: block; width: 100%; height: 100%; }
 
-        /* スコア表示 */
         #ui {
             position: absolute; top: 10px; left: 0; width: 100%;
-            text-align: center; color: #ecf0f1; font-size: 22px; font-weight: bold;
+            text-align: center; color: #ecf0f1; font-size: 20px; font-weight: bold;
             pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 20;
         }
 
-        /* メニュー（オーバーレイ） */
+        /* メニュー画面 */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.92); z-index: 50;
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; /* 中央寄せ */
-            padding: 10px;
+            justify-content: center; padding: 10px;
         }
 
-        #menuHeader { text-align: center; margin-bottom: 10px; }
-        #menuTitle { color: #3498db; margin: 0; font-size: 26px; }
-        .best-info { font-weight: bold; color: #f1c40f; }
+        #menuHeader { text-align: center; margin-bottom: 5px; }
+        #menuTitle { color: #3498db; margin: 0; font-size: 22px; }
+        .best-info { font-weight: bold; color: #f1c40f; font-size: 16px; }
 
-        /* 中央の直接貼り付け広告：最初は隠しておく */
+        /* 中央広告：スタート時は非表示、ゲームオーバー時に表示 */
         #ad-middle-container {
             width: 300px; height: 250px; background: #000;
-            margin: 10px 0; display: none; /* ← ここがポイント */
+            margin: 5px 0; display: none;
             justify-content: center; align-items: center;
             border: 1px solid #333; flex-shrink: 0;
         }
         
-        /* ボタンエリア */
+        /* ボタン群：少しコンパクトにして押し出しを防止 */
         .btn-group {
             display: flex; flex-direction: column; align-items: center;
-            margin-top: 10px;
+            width: 100%; margin-top: 5px;
         }
 
         #goButton {
-            padding: 14px 0; font-size: 20px; background: #3498db; border: none;
+            padding: 12px 0; font-size: 18px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px #2980b9; width: 260px; margin-bottom: 12px;
+            box-shadow: 0 4px #2980b9; width: 240px; margin-bottom: 8px;
         }
         .link-btn {
-            padding: 11px 0; font-size: 15px; background: #9b59b6;
+            padding: 10px 0; font-size: 14px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
-            text-decoration: none; width: 260px; text-align: center;
+            text-decoration: none; width: 240px; text-align: center;
             box-shadow: 0 4px #8e44ad;
         }
     </style>
@@ -97,7 +95,7 @@
 
             <div class="btn-group">
                 <button id="goButton">START GAME</button>
-                <a href="https://saaaachi.github.io/slime-math2/" class="link-btn">他のゲームはこちら</a>
+                <a href="https://saaaachi.github.io/Blackhole-drop/" class="link-btn">他のゲームはこちら</a>
             </div>
         </div>
     </div>
@@ -110,6 +108,7 @@
         const ui = document.getElementById("ui");
         const menuScreen = document.getElementById("menuScreen");
         const menuTitle = document.getElementById("menuTitle");
+        const menuHeader = document.getElementById("menuHeader");
         const adMid = document.getElementById("ad-middle-container");
         const bestUi = document.getElementById("best-ui");
         const goButton = document.getElementById("goButton");
@@ -201,12 +200,13 @@
                 bestUi.innerText = bestScore;
             }
             
-            // --- ゲームオーバー画面の演出 ---
+            // --- ゲームオーバー画面の調整 ---
             menuTitle.innerText = "GAME OVER";
             menuTitle.style.color = "#e74c3c";
             goButton.innerText = "RETRY";
             
-            // 中央広告をここだけで表示する
+            // スペース確保のため、タイトル部分を少し詰めるなどの調整が可能
+            // 今回は中央広告を表示し、ボタンをコンパクトにする
             adMid.style.display = "flex"; 
             menuScreen.style.display = "flex";
         }
