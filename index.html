@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v2.4</title>
+    <title>Blackhole Drop v2.5</title>
     <style>
-        /* 画面全体のスクロールとバウンスを完全に殺す */
+        /* 画面全体の固定 */
+        * { box-sizing: border-box; }
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background: #1a252f; font-family: sans-serif;
-            position: fixed; top: 0; left: 0;
+            position: fixed;
         }
 
-        /* 150pxの壁（上） */
-        #ad-top {
-            position: absolute; top: 0; left: 0; width: 100%; height: 150px;
-            background: #000; z-index: 100;
+        /* 広告壁（上下）150pxは絶対死守 */
+        .ad-wall {
+            position: absolute; left: 0; width: 100%; height: 150px;
+            background: #000; z-index: 1000;
         }
+        #ad-top { top: 0; }
+        #ad-bottom { bottom: 0; }
+        iframe { border: none; width: 100%; height: 100%; }
 
-        /* ゲームエリア：上下150pxを絶対に空ける */
+        /* ゲーム可視エリア */
         #game-outer {
             position: absolute;
             top: 150px; bottom: 150px; left: 0; right: 0;
@@ -27,67 +31,64 @@
 
         canvas { display: block; width: 100%; height: 100%; }
 
-        /* UI（スコア） */
+        /* スコア表示 */
         #ui {
             position: absolute; top: 10px; left: 0; width: 100%;
-            text-align: center; color: #ecf0f1; font-size: 24px; font-weight: bold;
-            pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); z-index: 20;
+            text-align: center; color: #ecf0f1; font-size: 22px; font-weight: bold;
+            pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 20;
         }
 
-        /* メニュー画面 */
+        /* メニュー画面（ここを徹底修正） */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
-            align-items: center; justify-content: flex-start; z-index: 50; color: white;
-            padding-top: 20px;
+            background: rgba(0,0,0,0.9); z-index: 50; color: white;
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        /* 真ん中の広告枠：遅れても動かないように高さを「予約」 */
+        #menuHeader { margin-top: 15px; text-align: center; }
+        
+        /* 真ん中の広告枠：高さをあらかじめ予約してボタンを押し出さない */
         #ad-middle-container {
-            width: 300px; height: 250px; background: #000;
-            display: flex; justify-content: center; align-items: center;
-            margin: 10px 0; border: 1px solid #333; flex-shrink: 0;
+            width: 300px; min-height: 250px; background: #000;
+            margin-top: 10px; display: flex; justify-content: center; align-items: center;
         }
         
-        /* ボタンエリア：下の広告から距離を置く */
+        /* ボタン群：画面下部から「絶対位置」で配置して広告の裏に回らせない */
         .btn-group {
+            position: absolute;
+            bottom: 20px; /* ゲームエリアの下端から20pxの位置に固定 */
+            left: 50%;
+            transform: translateX(-50%);
             display: flex; flex-direction: column; align-items: center;
-            margin-top: auto; /* 一番下へ */
-            margin-bottom: 30px; /* 下広告との絶対的な距離 */
+            width: 100%;
+            z-index: 60;
         }
 
         #goButton {
-            padding: 15px 40px; font-size: 22px; background: #3498db; border: none;
+            padding: 14px 0; font-size: 20px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px #2980b9; width: 260px; margin-bottom: 15px;
+            box-shadow: 0 4px #2980b9; width: 260px; margin-bottom: 10px;
         }
         .link-btn {
-            padding: 12px 0; font-size: 16px; background: #9b59b6;
+            padding: 10px 0; font-size: 15px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
             text-decoration: none; width: 260px; text-align: center;
             box-shadow: 0 4px #8e44ad;
         }
-
-        /* 150pxの壁（下） */
-        #ad-bottom {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 150px;
-            background: #000; z-index: 100;
-        }
-        iframe { border: none; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-    <div id="ad-top"><iframe src="ad.html"></iframe></div>
+    <div id="ad-top" class="ad-wall"><iframe src="ad.html"></iframe></div>
 
     <div id="game-outer">
         <div id="ui">SCORE: 0</div>
         <canvas id="gameCanvas"></canvas>
 
         <div id="menuScreen">
-            <div id="menuHeader" style="text-align: center;">
-                <h1 id="menuTitle" style="color:#3498db; margin:0; font-size: 24px;">BLACKHOLE DROP</h1>
-                <div style="font-weight: bold; color: #f1c40f; margin-top: 5px;">BEST: <span id="best-ui">0</span></div>
+            <div id="menuHeader">
+                <h1 id="menuTitle" style="color:#3498db; margin:0; font-size: 22px;">BLACKHOLE DROP</h1>
+                <div style="font-weight: bold; color: #f1c40f;">BEST: <span id="best-ui">0</span></div>
             </div>
 
             <div id="ad-middle-container">
@@ -96,12 +97,12 @@
 
             <div class="btn-group">
                 <button id="goButton">START GAME</button>
-                <a href="" class="link-btn">他のゲームはこちら</a>
+                <a href="https://saaaachi.github.io/slime-math2/" class="link-btn">他のゲームはこちら</a>
             </div>
         </div>
     </div>
 
-    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
+    <div id="ad-bottom" class="ad-wall"><iframe src="ad.html"></iframe></div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -109,7 +110,6 @@
         const ui = document.getElementById("ui");
         const menuScreen = document.getElementById("menuScreen");
         const menuTitle = document.getElementById("menuTitle");
-        const adMid = document.getElementById("ad-middle-container");
         const bestUi = document.getElementById("best-ui");
         const goButton = document.getElementById("goButton");
         const gameOuter = document.getElementById("game-outer");
@@ -124,20 +124,17 @@
         let score = 0, bestScore = localStorage.getItem("blackhole_drop_best") || 0;
         let gameActive = false, player = { x: 0, y: 0, radius: 35, pull: 75 };
         let items = [], spawnTimer;
-
         bestUi.innerText = bestScore;
 
         goButton.onclick = () => {
             menuScreen.style.display = "none";
             gameOuter.style.backgroundColor = "#34495e";
             gameActive = true;
-            score = 0;
-            items = [];
+            score = 0; items = [];
             ui.innerText = "SCORE: 0";
             player.x = canvas.width / 2;
             player.y = canvas.height - 65;
-            spawnItem();
-            update();
+            spawnItem(); update();
         };
 
         function handleMove(e) {
@@ -166,8 +163,6 @@
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // UFO
             ctx.fillStyle = "#2980b9";
             ctx.beginPath();
             ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2);
@@ -182,22 +177,13 @@
                 it.y += it.speed;
                 ctx.fillStyle = it.type === "coin" ? "#f1c40f" : "#c0392b";
                 ctx.beginPath(); ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); ctx.fill();
-                
                 let dx = player.x - it.x, dy = player.y - it.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
-
                 if(dist < player.pull) {
                     if(it.type === "coin") {
-                        score++;
-                        ui.innerText = "SCORE: " + score;
-                        items.splice(i, 1);
-                    } else {
-                        gameOver();
-                        return;
-                    }
-                } else if(it.y > canvas.height + 50) {
-                    items.splice(i, 1);
-                }
+                        score++; ui.innerText = "SCORE: " + score; items.splice(i, 1);
+                    } else { gameOver(); return; }
+                } else if(it.y > canvas.height + 50) { items.splice(i, 1); }
             }
             if(gameActive) requestAnimationFrame(update);
         }
@@ -207,13 +193,11 @@
             gameActive = false;
             clearTimeout(spawnTimer);
             gameOuter.style.backgroundColor = "#e74c3c";
-            
             if(score > bestScore) {
                 bestScore = score;
                 localStorage.setItem("blackhole_drop_best", bestScore);
                 bestUi.innerText = bestScore;
             }
-            
             setTimeout(() => {
                 menuTitle.innerText = "GAME OVER";
                 menuTitle.style.color = "#e74c3c";
@@ -222,9 +206,8 @@
             }, 100);
         }
 
-        // 広告リフレッシュ
         setInterval(() => {
-            document.querySelectorAll('#ad-top iframe, #ad-bottom iframe').forEach(f => {
+            document.querySelectorAll('iframe').forEach(f => {
                 const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100);
             });
         }, 30000);
