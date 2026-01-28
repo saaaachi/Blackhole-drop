@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v2.8</title>
+    <title>Blackhole Drop v2.9</title>
     <style>
         * { box-sizing: border-box; }
         html, body {
@@ -12,7 +12,7 @@
             position: fixed;
         }
 
-        /* 上下広告（ad.html） */
+        /* 上下150px広告エリア */
         .ad-wall {
             position: absolute; left: 0; width: 100%; height: 150px;
             background: #000; z-index: 1000;
@@ -30,47 +30,42 @@
 
         canvas { display: block; width: 100%; height: 100%; }
 
-        #ui {
-            position: absolute; top: 10px; left: 0; width: 100%;
-            text-align: center; color: #ecf0f1; font-size: 20px; font-weight: bold;
-            pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 20;
-        }
-
         /* メニュー画面 */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.92); z-index: 50;
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 10px;
+            justify-content: center; padding: 5px;
         }
 
         #menuHeader { text-align: center; margin-bottom: 5px; }
         #menuTitle { color: #3498db; margin: 0; font-size: 22px; }
         .best-info { font-weight: bold; color: #f1c40f; font-size: 16px; }
 
-        /* 中央広告：スタート時は非表示、ゲームオーバー時に表示 */
+        /* 中央広告枠：高さを200pxに少しスリム化 */
         #ad-middle-container {
-            width: 300px; height: 250px; background: #000;
+            width: 300px; height: 200px; background: #000;
             margin: 5px 0; display: none;
             justify-content: center; align-items: center;
             border: 1px solid #333; flex-shrink: 0;
+            overflow: hidden; /* はみ出し防止 */
         }
         
-        /* ボタン群：少しコンパクトにして押し出しを防止 */
+        /* ボタン群：さらにコンパクトに */
         .btn-group {
             display: flex; flex-direction: column; align-items: center;
             width: 100%; margin-top: 5px;
         }
 
         #goButton {
-            padding: 12px 0; font-size: 18px; background: #3498db; border: none;
+            padding: 10px 0; font-size: 18px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px #2980b9; width: 240px; margin-bottom: 8px;
+            box-shadow: 0 4px #2980b9; width: 220px; margin-bottom: 8px;
         }
         .link-btn {
-            padding: 10px 0; font-size: 14px; background: #9b59b6;
+            padding: 8px 0; font-size: 14px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
-            text-decoration: none; width: 240px; text-align: center;
+            text-decoration: none; width: 220px; text-align: center;
             box-shadow: 0 4px #8e44ad;
         }
     </style>
@@ -80,7 +75,7 @@
     <div id="ad-top" class="ad-wall"><iframe src="ad.html"></iframe></div>
 
     <div id="game-outer">
-        <div id="ui">SCORE: 0</div>
+        <div id="ui" style="position:absolute; top:10px; width:100%; text-align:center; color:white; font-weight:bold; pointer-events:none; z-index:20;">SCORE: 0</div>
         <canvas id="gameCanvas"></canvas>
 
         <div id="menuScreen">
@@ -95,7 +90,7 @@
 
             <div class="btn-group">
                 <button id="goButton">START GAME</button>
-                <a href="https://saaaachi.github.io/Blackhole-drop/" class="link-btn">他のゲームはこちら</a>
+                <a href="https://saaaachi.github.io/slime-math2/" class="link-btn">他のゲームはこちら</a>
             </div>
         </div>
     </div>
@@ -105,7 +100,6 @@
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const ui = document.getElementById("ui");
         const menuScreen = document.getElementById("menuScreen");
         const menuTitle = document.getElementById("menuTitle");
         const menuHeader = document.getElementById("menuHeader");
@@ -113,6 +107,7 @@
         const bestUi = document.getElementById("best-ui");
         const goButton = document.getElementById("goButton");
         const gameOuter = document.getElementById("game-outer");
+        const scoreUi = document.getElementById("ui");
 
         function resize() {
             canvas.width = gameOuter.clientWidth;
@@ -131,7 +126,7 @@
             gameOuter.style.backgroundColor = "#34495e";
             gameActive = true;
             score = 0; items = [];
-            ui.innerText = "SCORE: 0";
+            scoreUi.innerText = "SCORE: 0";
             player.x = canvas.width / 2;
             player.y = canvas.height - 65;
             spawnItem(); update();
@@ -164,13 +159,9 @@
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#2980b9";
-            ctx.beginPath();
-            ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = "#1e374d";
-            ctx.beginPath();
-            ctx.ellipse(player.x, player.y, player.radius, player.radius / 3, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.beginPath(); ctx.ellipse(player.x, player.y, player.radius, player.radius / 3, 0, 0, Math.PI * 2); ctx.fill();
 
             for(let i = items.length - 1; i >= 0; i--) {
                 let it = items[i];
@@ -181,7 +172,7 @@
                 let dist = Math.sqrt(dx * dx + dy * dy);
                 if(dist < player.pull) {
                     if(it.type === "coin") {
-                        score++; ui.innerText = "SCORE: " + score; items.splice(i, 1);
+                        score++; scoreUi.innerText = "SCORE: " + score; items.splice(i, 1);
                     } else { gameOver(); return; }
                 } else if(it.y > canvas.height + 50) { items.splice(i, 1); }
             }
@@ -205,8 +196,8 @@
             menuTitle.style.color = "#e74c3c";
             goButton.innerText = "RETRY";
             
-            // スペース確保のため、タイトル部分を少し詰めるなどの調整が可能
-            // 今回は中央広告を表示し、ボタンをコンパクトにする
+            // 重要：タイトルヘッダーを非表示にしてスペースを空ける
+            menuHeader.style.display = "block"; // もしさらに厳しければ "none" に変えてください
             adMid.style.display = "flex"; 
             menuScreen.style.display = "flex";
         }
