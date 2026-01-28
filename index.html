@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v2.1</title>
+    <title>Blackhole Drop v2.2</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -21,11 +21,12 @@
         #ad-bottom { bottom: 0; }
         iframe { border: none; width: 100%; height: 100%; }
 
-        /* メインコンテナ：ここがゲームの可視領域 */
+        /* メインコンテナ：広告を避けた可視領域 */
         #main-container {
             position: absolute;
             top: 150px; bottom: 150px; left: 0; right: 0;
             background: #34495e; overflow: hidden; z-index: 10;
+            transition: background-color 0.1s;
         }
 
         canvas { display: block; width: 100%; height: 100%; }
@@ -45,7 +46,7 @@
 
         #ad-middle-container { 
             width: 300px; height: 250px; background: #1a252f; display: none; 
-            justify-content: center; align-items: center; flex-shrink: 0; margin: 10px 0;
+            justify-content: center; align-items: center; flex-shrink: 0; margin: 5px 0;
         }
         
         #menuHeader { text-align: center; }
@@ -73,8 +74,8 @@
 
         <div id="menuScreen">
             <div id="menuHeader">
-                <h1 style="color:#3498db; margin:0; font-size: 26px;">BLACKHOLE DROP</h1>
-                <p style="margin:5px 0; font-size: 14px;">アイテムを吸い込み、爆弾を避けろ！</p>
+                <h1 id="menuTitle" style="color:#3498db; margin:0; font-size: 26px;">BLACKHOLE DROP</h1>
+                <p id="menuDesc" style="margin:5px 0; font-size: 14px;">アイテムを吸い込み、爆弾を避けろ！</p>
                 <div class="best-info">BEST: <span id="best-ui">0</span></div>
             </div>
 
@@ -97,6 +98,7 @@
         const ui = document.getElementById("ui");
         const menuScreen = document.getElementById("menuScreen");
         const menuHeader = document.getElementById("menuHeader");
+        const menuTitle = document.getElementById("menuTitle");
         const adMid = document.getElementById("ad-middle-container");
         const bestUi = document.getElementById("best-ui");
         const goButton = document.getElementById("goButton");
@@ -109,12 +111,9 @@
         window.addEventListener('resize', resize);
         resize();
 
-        let score = 0;
-        let bestScore = localStorage.getItem("blackhole_drop_best") || 0;
-        let gameActive = false;
-        let player = { x: 0, y: 0, radius: 35, pull: 75 };
-        let items = [];
-        let spawnTimer;
+        let score = 0, bestScore = localStorage.getItem("blackhole_drop_best") || 0;
+        let gameActive = false, player = { x: 0, y: 0, radius: 35, pull: 75 };
+        let items = [], spawnTimer;
 
         bestUi.innerText = bestScore;
 
@@ -122,6 +121,7 @@
             menuScreen.style.display = "none";
             adMid.style.display = "none";
             menuHeader.style.display = "block";
+            mainContainer.style.backgroundColor = "#34495e";
             gameActive = true;
             score = 0;
             items = [];
@@ -150,20 +150,17 @@
             const size = isBomb ? 25 : 20;
             items.push({
                 x: Math.random() * (canvas.width - size * 2) + size,
-                y: -50,
-                size: size,
-                type: isBomb ? "bomb" : "coin",
+                y: -50, size: size, type: isBomb ? "bomb" : "coin",
                 speed: 3 + Math.random() * 2 + (score / 150)
             });
-            let interval = Math.max(200, 800 - (score * 2));
-            spawnTimer = setTimeout(spawnItem, interval);
+            spawnTimer = setTimeout(spawnItem, Math.max(200, 800 - (score * 2)));
         }
 
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // UFO / ブラックホール描画
+            // UFO
             ctx.fillStyle = "#2980b9";
             ctx.beginPath();
             ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2);
@@ -176,20 +173,10 @@
             for(let i = items.length - 1; i >= 0; i--) {
                 let it = items[i];
                 it.y += it.speed;
-
-                // 描画
                 ctx.fillStyle = it.type === "coin" ? "#f1c40f" : "#c0392b";
-                ctx.beginPath(); 
-                ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); 
-                ctx.fill();
-                if(it.type === "bomb") {
-                    ctx.fillStyle = "#e74c3c";
-                    ctx.fillRect(it.x - 2, it.y - it.size - 5, 4, 10);
-                }
-
-                // 吸い込み判定
-                let dx = player.x - it.x;
-                let dy = player.y - it.y;
+                ctx.beginPath(); ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); ctx.fill();
+                
+                let dx = player.x - it.x, dy = player.y - it.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
 
                 if(dist < player.pull) {
@@ -198,43 +185,46 @@
                         ui.innerText = "SCORE: " + score;
                         items.splice(i, 1);
                     } else {
-                        gameOver();
+                        gameOver(); // 爆弾
                         return;
                     }
                 } else if(it.y > canvas.height + 50) {
                     items.splice(i, 1);
                 }
             }
-            requestAnimationFrame(update);
+            if(gameActive) requestAnimationFrame(update);
         }
 
         function gameOver() {
+            if (!gameActive) return;
             gameActive = false;
             clearTimeout(spawnTimer);
+
+            // 演出：一瞬赤くして「当たった」ことを示す
+            mainContainer.style.backgroundColor = "#e74c3c";
+            
             if(score > bestScore) {
                 bestScore = score;
                 localStorage.setItem("blackhole_drop_best", bestScore);
                 bestUi.innerText = bestScore;
             }
             
-            menuTitle.innerText = "BOMB!!!";
-            menuTitle.style.color = "#e74c3c";
-            menuHeader.style.display = "none"; // 中サイズ広告のためにヘッダーを隠す
-            goButton.innerText = "RETRY";
-            adMid.style.display = "flex"; 
-            menuScreen.style.display = "flex";
+            // 0.1秒だけ待ってからメニューを表示（フリーズ防止）
+            setTimeout(() => {
+                menuTitle.innerText = "BOMB!!!";
+                menuTitle.style.color = "#e74c3c";
+                menuHeader.style.display = "none"; 
+                goButton.innerText = "RETRY";
+                adMid.style.display = "flex"; 
+                menuScreen.style.display = "flex";
+            }, 100);
         }
 
-        // 広告リフレッシュ
         setInterval(() => {
-            ["frame-top", "frame-bottom"].forEach(id => {
-                const f = document.getElementById(id);
-                if(f) {
-                    const s = f.src; f.src = "about:blank";
-                    setTimeout(() => f.src = s, 100);
-                }
+            document.querySelectorAll('iframe').forEach(f => {
+                const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100);
             });
-        }, 29000);
+        }, 30000);
     </script>
 </body>
 </html>
