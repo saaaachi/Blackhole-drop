@@ -3,116 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop</title>
+    <title>Blackhole Drop v2.1</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #2c3e50; font-family: sans-serif; touch-action: none; }
+        * { box-sizing: border-box; }
+        body { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #2c3e50; font-family: sans-serif; 
+            touch-action: none; position: fixed;
+        }
         
-        /* 広告エリア：高さを150pxに設定 */
+        /* 広告エリア：上下150px固定 */
         #ad-top, #ad-bottom { 
-            position: fixed; left: 0; width: 100%; height: 150px; 
-            background: #333; z-index: 100; display: flex; align-items: center; justify-content: center; 
+            position: absolute; left: 0; width: 100%; height: 150px; 
+            background: #1a252f; z-index: 1000; display: flex; align-items: center; justify-content: center;
         }
         #ad-top { top: 0; }
         #ad-bottom { bottom: 0; }
-        
-        iframe { border: none; width: 100%; height: 150px; }
+        iframe { border: none; width: 100%; height: 100%; }
 
-        /* キャンバス：広告を避けて中央に配置 */
-        canvas { display: block; margin-top: 150px; background: #34495e; }
-        
-        #ui { position: absolute; top: 160px; left: 0; width: 100%; text-align: center; color: #ecf0f1; font-size: 26px; font-weight: bold; pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); z-index: 10; }
-        
-        #startScreen { 
-            position: absolute; top: 150px; left: 0; width: 100%; height: calc(100vh - 300px); 
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; color: white;
+        /* メインコンテナ：ここがゲームの可視領域 */
+        #main-container {
+            position: absolute;
+            top: 150px; bottom: 150px; left: 0; right: 0;
+            background: #34495e; overflow: hidden; z-index: 10;
         }
-        #goButton { padding: 15px 45px; font-size: 24px; background: #3498db; border: none; border-radius: 50px; color: white; font-weight: bold; cursor: pointer; box-shadow: 0 4px #2980b9; }
-        #best-info { margin-top: 15px; font-weight: bold; }
+
+        canvas { display: block; width: 100%; height: 100%; }
+        
+        #ui { 
+            position: absolute; top: 10px; left: 0; width: 100%; 
+            text-align: center; color: #ecf0f1; font-size: 24px; font-weight: bold; 
+            pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); z-index: 20; 
+        }
+        
+        /* メニュー画面 */
+        #menuScreen { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; z-index: 50; color: white; padding: 10px;
+        }
+
+        #ad-middle-container { 
+            width: 300px; height: 250px; background: #1a252f; display: none; 
+            justify-content: center; align-items: center; flex-shrink: 0; margin: 10px 0;
+        }
+        
+        #menuHeader { text-align: center; }
+        #goButton { 
+            padding: 12px 40px; font-size: 20px; background: #3498db; border: none; 
+            border-radius: 50px; color: white; font-weight: bold; cursor: pointer; 
+            box-shadow: 0 4px #2980b9; width: 220px;
+        }
+        .link-btn {
+            margin-top: 10px; padding: 12px 0; font-size: 16px; background: #9b59b6; 
+            border: none; border-radius: 50px; color: white; font-weight: bold; 
+            text-decoration: none; width: 220px; text-align: center; display: block;
+            box-shadow: 0 4px #8e44ad;
+        }
+        .best-info { margin-top: 5px; font-weight: bold; color: #f1c40f; }
     </style>
 </head>
 <body>
 
     <div id="ad-top"><iframe id="frame-top" src="ad.html"></iframe></div>
-    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
 
-    <div id="startScreen">
-        <h1 style="color:#3498db; margin-bottom:10px;">BLACKHOLE DROP</h1>
-        <p style="margin-bottom: 25px;">落ちてくるアイテムを吸い込め！<br>爆弾は避けろ！</p>
-        <button id="goButton">START GAME</button>
-        <p id="best-info">BEST SCORE: <span id="best-ui">0</span></p>
+    <div id="main-container">
+        <div id="ui">SCORE: 0</div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="menuScreen">
+            <div id="menuHeader">
+                <h1 style="color:#3498db; margin:0; font-size: 26px;">BLACKHOLE DROP</h1>
+                <p style="margin:5px 0; font-size: 14px;">アイテムを吸い込み、爆弾を避けろ！</p>
+                <div class="best-info">BEST: <span id="best-ui">0</span></div>
+            </div>
+
+            <div id="ad-middle-container">
+                <script src="https://adm.shinobi.jp/s/1e6de436ea850948e238e975a93767eb"></script>
+            </div>
+
+            <div id="btnGroup" style="display: flex; flex-direction: column; align-items: center; margin-top: 10px;">
+                <button id="goButton">START GAME</button>
+                <a href="https://saaaachi.github.io/slime-math2/" class="link-btn">他のゲームはこちら</a>
+            </div>
+        </div>
     </div>
 
-    <div id="ui">SCORE: 0</div>
-    <canvas id="gameCanvas"></canvas>
+    <div id="ad-bottom"><iframe id="frame-bottom" src="ad.html"></iframe></div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const ui = document.getElementById("ui");
-        const startScreen = document.getElementById("startScreen");
-        const goButton = document.getElementById("goButton");
+        const menuScreen = document.getElementById("menuScreen");
+        const menuHeader = document.getElementById("menuHeader");
+        const adMid = document.getElementById("ad-middle-container");
         const bestUi = document.getElementById("best-ui");
+        const goButton = document.getElementById("goButton");
+        const mainContainer = document.getElementById("main-container");
 
-        // キャンバスサイズ設定（上下150pxずつ引く）
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 300;
+        function resize() {
+            canvas.width = mainContainer.clientWidth;
+            canvas.height = mainContainer.clientHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
 
         let score = 0;
         let bestScore = localStorage.getItem("blackhole_drop_best") || 0;
         let gameActive = false;
-        let player = { x: canvas.width / 2, y: canvas.height - 70, radius: 35, pull: 80 }; // pull: 吸い込み範囲
-        let items = []; // 落ちてくるアイテム（コインや爆弾）
+        let player = { x: 0, y: 0, radius: 35, pull: 75 };
+        let items = [];
+        let spawnTimer;
+
         bestUi.innerText = bestScore;
 
         goButton.onclick = () => {
-            startScreen.style.display = "none";
+            menuScreen.style.display = "none";
+            adMid.style.display = "none";
+            menuHeader.style.display = "block";
             gameActive = true;
             score = 0;
             items = [];
             ui.innerText = "SCORE: 0";
+            player.x = canvas.width / 2;
+            player.y = canvas.height - 60;
             spawnItem();
             update();
         };
 
-        // 操作：スライドでUFOを動かす
         function handleMove(e) {
             if(!gameActive) return;
+            const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            player.x = clientX;
-            // 画面外防止
+            player.x = clientX - rect.left;
             if(player.x < player.radius) player.x = player.radius;
             if(player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
         }
 
-        window.addEventListener("touchmove", (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
-        window.addEventListener("mousemove", handleMove);
+        canvas.addEventListener("touchmove", (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
+        canvas.addEventListener("mousemove", handleMove);
 
         function spawnItem() {
             if(!gameActive) return;
-            const isBomb = Math.random() < 0.25; // 25%の確率で爆弾
-            const size = isBomb ? 25 : 20; // 爆弾は少し大きい
+            const isBomb = Math.random() < 0.25;
+            const size = isBomb ? 25 : 20;
             items.push({
                 x: Math.random() * (canvas.width - size * 2) + size,
                 y: -50,
                 size: size,
                 type: isBomb ? "bomb" : "coin",
-                speed: 3 + Math.random() * 2 + (score / 150) // スコアに応じて加速
+                speed: 3 + Math.random() * 2 + (score / 150)
             });
-            // 出現間隔を徐々に短く
-            let interval = Math.max(200, 800 - (score / 2));
-            setTimeout(spawnItem, interval);
+            let interval = Math.max(200, 800 - (score * 2));
+            spawnTimer = setTimeout(spawnItem, interval);
         }
 
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // ブラックホールUFO描画
+            // UFO / ブラックホール描画
             ctx.fillStyle = "#2980b9";
             ctx.beginPath();
             ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = "#1e374d"; // ブラックホール本体（楕円）
+            ctx.fillStyle = "#1e374d";
             ctx.beginPath();
             ctx.ellipse(player.x, player.y, player.radius, player.radius / 3, 0, 0, Math.PI * 2);
             ctx.fill();
@@ -121,32 +177,31 @@
                 let it = items[i];
                 it.y += it.speed;
 
-                // アイテム描画
-                if(it.type === "coin") {
-                    ctx.fillStyle = "#f1c40f";
-                    ctx.beginPath(); ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); ctx.fill();
-                } else { // Bomb
-                    ctx.fillStyle = "#c0392b";
-                    ctx.beginPath(); ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); ctx.fill();
-                    ctx.fillStyle = "#e74c3c"; // 導火線
+                // 描画
+                ctx.fillStyle = it.type === "coin" ? "#f1c40f" : "#c0392b";
+                ctx.beginPath(); 
+                ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); 
+                ctx.fill();
+                if(it.type === "bomb") {
+                    ctx.fillStyle = "#e74c3c";
                     ctx.fillRect(it.x - 2, it.y - it.size - 5, 4, 10);
                 }
 
-                // 吸い込み判定（ブラックホールの「pull」範囲）
+                // 吸い込み判定
                 let dx = player.x - it.x;
                 let dy = player.y - it.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
 
-                if(dist < player.pull) { // 吸い込み範囲に入ったら
+                if(dist < player.pull) {
                     if(it.type === "coin") {
                         score++;
                         ui.innerText = "SCORE: " + score;
                         items.splice(i, 1);
-                    } else { // 爆弾を吸い込んだ
+                    } else {
                         gameOver();
                         return;
                     }
-                } else if(it.y > canvas.height + 50) { // 画面外に落ちたら
+                } else if(it.y > canvas.height + 50) {
                     items.splice(i, 1);
                 }
             }
@@ -155,15 +210,22 @@
 
         function gameOver() {
             gameActive = false;
+            clearTimeout(spawnTimer);
             if(score > bestScore) {
                 bestScore = score;
                 localStorage.setItem("blackhole_drop_best", bestScore);
+                bestUi.innerText = bestScore;
             }
-            alert("GAME OVER!\nSCORE: " + score);
-            location.reload();
+            
+            menuTitle.innerText = "BOMB!!!";
+            menuTitle.style.color = "#e74c3c";
+            menuHeader.style.display = "none"; // 中サイズ広告のためにヘッダーを隠す
+            goButton.innerText = "RETRY";
+            adMid.style.display = "flex"; 
+            menuScreen.style.display = "flex";
         }
 
-        // 🚀 30秒ごとに広告を転生（強制リフレッシュ）
+        // 広告リフレッシュ
         setInterval(() => {
             ["frame-top", "frame-bottom"].forEach(id => {
                 const f = document.getElementById(id);
