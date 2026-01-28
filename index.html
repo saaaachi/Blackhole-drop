@@ -3,86 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v2.3 - Ad Safety</title>
+    <title>Blackhole Drop v2.4</title>
     <style>
-        /* 1. 画面全体のスクロールを完全に禁止し、3段構造にする */
-        * { box-sizing: border-box; }
+        /* 画面全体のスクロールとバウンスを完全に殺す */
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background: #1a252f; font-family: sans-serif;
-            display: flex; flex-direction: column; /* 上・中・下を並べる */
+            position: fixed; top: 0; left: 0;
         }
 
-        /* 2. 広告エリアを「固定」する（ゲーム画面を圧迫させない） */
-        .ad-area {
-            width: 100%; height: 150px; flex-shrink: 0;
-            background: #000; display: flex; align-items: center; justify-content: center;
-            z-index: 100;
+        /* 150pxの壁（上） */
+        #ad-top {
+            position: absolute; top: 0; left: 0; width: 100%; height: 150px;
+            background: #000; z-index: 100;
         }
-        iframe { border: none; width: 100%; height: 100%; }
 
-        /* 3. ゲーム画面エリア（広告に絶対侵入させない聖域） */
-        #game-container {
-            flex-grow: 1; /* 残りの画面をすべて使う */
-            position: relative;
-            background: #34495e;
-            overflow: hidden;
-            touch-action: none;
+        /* ゲームエリア：上下150pxを絶対に空ける */
+        #game-outer {
+            position: absolute;
+            top: 150px; bottom: 150px; left: 0; right: 0;
+            background: #34495e; overflow: hidden; z-index: 10;
         }
 
         canvas { display: block; width: 100%; height: 100%; }
 
+        /* UI（スコア） */
         #ui {
             position: absolute; top: 10px; left: 0; width: 100%;
             text-align: center; color: #ecf0f1; font-size: 24px; font-weight: bold;
             pointer-events: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); z-index: 20;
         }
 
-        /* 4. メニュー画面（ボタンを少し上に配置して誤タップ防止） */
+        /* メニュー画面 */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 50; color: white; padding: 10px;
+            background: rgba(0,0,0,0.95); display: flex; flex-direction: column;
+            align-items: center; justify-content: flex-start; z-index: 50; color: white;
+            padding-top: 20px;
         }
 
+        /* 真ん中の広告枠：遅れても動かないように高さを「予約」 */
         #ad-middle-container {
-            width: 300px; height: 250px; background: #1a252f; display: none;
-            justify-content: center; align-items: center; flex-shrink: 0; margin: 10px 0;
+            width: 300px; height: 250px; background: #000;
+            display: flex; justify-content: center; align-items: center;
+            margin: 10px 0; border: 1px solid #333; flex-shrink: 0;
         }
-
-        #menuHeader { text-align: center; }
+        
+        /* ボタンエリア：下の広告から距離を置く */
         .btn-group {
             display: flex; flex-direction: column; align-items: center;
-            margin-top: 10px; padding-bottom: 20px; /* 下広告との距離 */
+            margin-top: auto; /* 一番下へ */
+            margin-bottom: 30px; /* 下広告との絶対的な距離 */
         }
 
         #goButton {
-            padding: 14px 45px; font-size: 22px; background: #3498db; border: none;
+            padding: 15px 40px; font-size: 22px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px #2980b9; width: 240px; margin-bottom: 12px;
+            box-shadow: 0 4px #2980b9; width: 260px; margin-bottom: 15px;
         }
         .link-btn {
             padding: 12px 0; font-size: 16px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
-            text-decoration: none; width: 240px; text-align: center;
+            text-decoration: none; width: 260px; text-align: center;
             box-shadow: 0 4px #8e44ad;
         }
-        .best-info { margin-top: 5px; font-weight: bold; color: #f1c40f; }
+
+        /* 150pxの壁（下） */
+        #ad-bottom {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 150px;
+            background: #000; z-index: 100;
+        }
+        iframe { border: none; width: 100%; height: 100%; }
     </style>
 </head>
 <body>
 
-    <div class="ad-area"><iframe id="frame-top" src="ad.html"></iframe></div>
+    <div id="ad-top"><iframe src="ad.html"></iframe></div>
 
-    <div id="game-container">
+    <div id="game-outer">
         <div id="ui">SCORE: 0</div>
         <canvas id="gameCanvas"></canvas>
 
         <div id="menuScreen">
-            <div id="menuHeader">
-                <h1 id="menuTitle" style="color:#3498db; margin:0; font-size: 28px;">BLACKHOLE DROP</h1>
-                <p style="margin:5px 0; font-size: 14px;">アイテムを吸い込み、爆弾を避けろ！</p>
-                <div class="best-info">BEST: <span id="best-ui">0</span></div>
+            <div id="menuHeader" style="text-align: center;">
+                <h1 id="menuTitle" style="color:#3498db; margin:0; font-size: 24px;">BLACKHOLE DROP</h1>
+                <div style="font-weight: bold; color: #f1c40f; margin-top: 5px;">BEST: <span id="best-ui">0</span></div>
             </div>
 
             <div id="ad-middle-container">
@@ -91,28 +96,27 @@
 
             <div class="btn-group">
                 <button id="goButton">START GAME</button>
-                <a href="https://saaaachi.github.io/slime-math2/" class="link-btn">他のゲームはこちら</a>
+                <a href="" class="link-btn">他のゲームはこちら</a>
             </div>
         </div>
     </div>
 
-    <div class="ad-area"><iframe id="frame-bottom" src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const ui = document.getElementById("ui");
         const menuScreen = document.getElementById("menuScreen");
-        const menuHeader = document.getElementById("menuHeader");
         const menuTitle = document.getElementById("menuTitle");
         const adMid = document.getElementById("ad-middle-container");
         const bestUi = document.getElementById("best-ui");
         const goButton = document.getElementById("goButton");
-        const gameContainer = document.getElementById("game-container");
+        const gameOuter = document.getElementById("game-outer");
 
         function resize() {
-            canvas.width = gameContainer.clientWidth;
-            canvas.height = gameContainer.clientHeight;
+            canvas.width = gameOuter.clientWidth;
+            canvas.height = gameOuter.clientHeight;
         }
         window.addEventListener('resize', resize);
         resize();
@@ -125,9 +129,7 @@
 
         goButton.onclick = () => {
             menuScreen.style.display = "none";
-            adMid.style.display = "none";
-            menuHeader.style.display = "block";
-            gameContainer.style.backgroundColor = "#34495e";
+            gameOuter.style.backgroundColor = "#34495e";
             gameActive = true;
             score = 0;
             items = [];
@@ -147,16 +149,15 @@
             if(player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
         }
 
-        canvas.addEventListener("touchmove", (e) => { handleMove(e); e.preventDefault(); }, {passive: false});
+        canvas.addEventListener("touchmove", (e) => { e.preventDefault(); handleMove(e); }, {passive: false});
         canvas.addEventListener("mousemove", handleMove);
 
         function spawnItem() {
             if(!gameActive) return;
             const isBomb = Math.random() < 0.25;
-            const size = isBomb ? 25 : 20;
             items.push({
-                x: Math.random() * (canvas.width - size * 2) + size,
-                y: -50, size: size, type: isBomb ? "bomb" : "coin",
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: -50, size: isBomb ? 25 : 20, type: isBomb ? "bomb" : "coin",
                 speed: 3 + Math.random() * 2 + (score / 150)
             });
             spawnTimer = setTimeout(spawnItem, Math.max(200, 800 - (score * 2)));
@@ -166,6 +167,7 @@
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+            // UFO
             ctx.fillStyle = "#2980b9";
             ctx.beginPath();
             ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2);
@@ -204,8 +206,7 @@
             if (!gameActive) return;
             gameActive = false;
             clearTimeout(spawnTimer);
-
-            gameContainer.style.backgroundColor = "#e74c3c";
+            gameOuter.style.backgroundColor = "#e74c3c";
             
             if(score > bestScore) {
                 bestScore = score;
@@ -216,15 +217,14 @@
             setTimeout(() => {
                 menuTitle.innerText = "GAME OVER";
                 menuTitle.style.color = "#e74c3c";
-                menuHeader.style.display = "none"; 
                 goButton.innerText = "RETRY";
-                adMid.style.display = "flex"; 
                 menuScreen.style.display = "flex";
             }, 100);
         }
 
+        // 広告リフレッシュ
         setInterval(() => {
-            document.querySelectorAll('iframe').forEach(f => {
+            document.querySelectorAll('#ad-top iframe, #ad-bottom iframe').forEach(f => {
                 const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100);
             });
         }, 30000);
