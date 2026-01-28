@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v2.9</title>
+    <title>Blackhole Drop v3.0</title>
     <style>
         * { box-sizing: border-box; }
         html, body {
@@ -12,7 +12,7 @@
             position: fixed;
         }
 
-        /* 上下150px広告エリア */
+        /* 上下広告エリア（150px固定） */
         .ad-wall {
             position: absolute; left: 0; width: 100%; height: 150px;
             background: #000; z-index: 1000;
@@ -27,31 +27,32 @@
             top: 150px; bottom: 150px; left: 0; right: 0;
             background: #34495e; overflow: hidden; z-index: 10;
         }
-
         canvas { display: block; width: 100%; height: 100%; }
 
-        /* メニュー画面 */
+        /* メニュー（中央広告を出す画面） */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.92); z-index: 50;
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 5px;
+            justify-content: flex-start; /* 上から詰めて配置 */
+            padding-top: 10px;
         }
 
+        /* タイトルとベストスコア：ゲームオーバー時はさらに詰める */
         #menuHeader { text-align: center; margin-bottom: 5px; }
-        #menuTitle { color: #3498db; margin: 0; font-size: 22px; }
-        .best-info { font-weight: bold; color: #f1c40f; font-size: 16px; }
+        #menuTitle { color: #3498db; margin: 0; font-size: 20px; }
+        .best-info { font-weight: bold; color: #f1c40f; font-size: 14px; }
 
-        /* 中央広告枠：高さを200pxに少しスリム化 */
+        /* 中央広告枠：高さを180pxまでスリム化（これでボタンを上に引き上げる） */
         #ad-middle-container {
-            width: 300px; height: 200px; background: #000;
-            margin: 5px 0; display: none;
+            width: 300px; height: 180px; background: #000;
+            margin: 5px 0; display: none; /* 初期は隠す */
             justify-content: center; align-items: center;
             border: 1px solid #333; flex-shrink: 0;
-            overflow: hidden; /* はみ出し防止 */
+            overflow: hidden;
         }
         
-        /* ボタン群：さらにコンパクトに */
+        /* ボタン群：極限までコンパクトに */
         .btn-group {
             display: flex; flex-direction: column; align-items: center;
             width: 100%; margin-top: 5px;
@@ -191,13 +192,10 @@
                 bestUi.innerText = bestScore;
             }
             
-            // --- ゲームオーバー画面の調整 ---
-            menuTitle.innerText = "GAME OVER";
-            menuTitle.style.color = "#e74c3c";
+            // --- ゲームオーバー画面の救出作戦 ---
+            menuTitle.style.display = "none"; // タイトルを消してスペースを稼ぐ！
             goButton.innerText = "RETRY";
             
-            // 重要：タイトルヘッダーを非表示にしてスペースを空ける
-            menuHeader.style.display = "block"; // もしさらに厳しければ "none" に変えてください
             adMid.style.display = "flex"; 
             menuScreen.style.display = "flex";
         }
