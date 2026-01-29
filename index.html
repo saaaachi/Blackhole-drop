@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v3.1</title>
+    <title>Blackhole Drop v3.2</title>
     <style>
         * { box-sizing: border-box; }
         html, body {
@@ -18,17 +18,16 @@
             background: #000; z-index: 1000;
         }
 
-        /* 下の広告：重なりを防ぐため、一番下から100px浮かせる */
+        /* 下の広告：最下部に配置してPR広告の裏に潜り込ませる */
         #ad-bottom {
-            position: absolute; bottom: 100px; /* ここを浮かせるのがポイント */
-            left: 0; width: 100%; height: 150px;
-            background: #000; z-index: 1000;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100px;
+            background: #000; z-index: 1; /* 重なり順を低くする */
         }
 
-        /* ゲームエリア：下の広告の位置に合わせて調整 */
+        /* ゲームエリア：下までしっかり広げる */
         #game-outer {
             position: absolute;
-            top: 150px; bottom: 250px; /* 下の余白を多めに確保 */
+            top: 150px; bottom: 60px; /* PR広告の高さ分だけ空ける */
             left: 0; right: 0;
             background: #34495e; overflow: hidden; z-index: 10;
         }
@@ -39,39 +38,37 @@
         /* メニュー画面 */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); z-index: 50;
+            background: rgba(0,0,0,0.85); z-index: 50;
             display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 5px;
+            justify-content: center;
         }
 
-        #menuHeader { text-align: center; margin-bottom: 5px; }
-        #menuTitle { color: #3498db; margin: 0; font-size: 20px; }
-        .best-info { font-weight: bold; color: #f1c40f; font-size: 14px; }
+        #menuHeader { text-align: center; margin-bottom: 10px; }
+        #menuTitle { color: #3498db; margin: 0; font-size: 24px; }
+        .best-info { font-weight: bold; color: #f1c40f; font-size: 18px; }
 
-        /* 中央広告枠（ゲームオーバー時のみ） */
+        /* 中央広告（ゲームオーバー時のみ） */
         #ad-middle-container {
-            width: 300px; height: 180px; background: #000;
-            margin: 5px 0; display: none;
+            width: 300px; height: 250px; background: #000;
+            margin: 15px 0; display: none;
             justify-content: center; align-items: center;
-            border: 1px solid #333; flex-shrink: 0;
         }
         
-        /* ボタン群：さらにスリムにして確実に収める */
+        /* ボタン群 */
         .btn-group {
             display: flex; flex-direction: column; align-items: center;
-            width: 100%; margin-top: 5px;
+            width: 100%;
         }
 
         #goButton {
-            padding: 8px 0; font-size: 16px; background: #3498db; border: none;
+            padding: 12px 0; font-size: 18px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px #2980b9; width: 200px; margin-bottom: 8px;
+            width: 240px; margin-bottom: 10px;
         }
         .link-btn {
-            padding: 8px 0; font-size: 13px; background: #9b59b6;
+            padding: 10px 0; font-size: 14px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
-            text-decoration: none; width: 200px; text-align: center;
-            box-shadow: 0 4px #8e44ad;
+            text-decoration: none; width: 240px; text-align: center;
         }
     </style>
 </head>
@@ -192,7 +189,7 @@
                 localStorage.setItem("blackhole_drop_best", bestScore);
                 bestUi.innerText = bestScore;
             }
-            menuTitle.style.display = "none"; 
+            menuTitle.innerText = "GAME OVER";
             goButton.innerText = "RETRY";
             adMid.style.display = "flex"; 
             menuScreen.style.display = "flex";
