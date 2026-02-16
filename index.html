@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackhole Drop v3.3</title>
+    <title>Blackhole Drop v3.3 - Ad Deluxe</title>
     <style>
         * { box-sizing: border-box; }
         html, body {
@@ -12,22 +12,22 @@
             position: fixed;
         }
 
-        /* 上の広告（150px） */
+        /* 上の広告（100pxに調整） */
         #ad-top {
-            position: absolute; top: 0; left: 0; width: 100%; height: 150px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100px;
             background: #000; z-index: 1000;
         }
 
-        /* 下の広告：PR広告の裏に重ねる */
+        /* 下の広告 */
         #ad-bottom {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 60px;
-            background: #000; z-index: 1;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 100px;
+            background: #000; z-index: 1000;
         }
 
-        /* ゲームエリア：上下の広告に挟まれた領域 */
+        /* ゲームエリア：上下100pxずつ空ける */
         #game-outer {
             position: absolute;
-            top: 150px; bottom: 60px;
+            top: 100px; bottom: 100px;
             left: 0; right: 0;
             background: #34495e; overflow: hidden; z-index: 10;
         }
@@ -35,49 +35,50 @@
         canvas { display: block; width: 100%; height: 100%; }
         iframe { border: none; width: 100%; height: 100%; }
 
-        /* メニュー画面：ボタンを救出するために上寄せに変更 */
+        /* メニュー画面 */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 50;
             display: flex; flex-direction: column; align-items: center;
-            justify-content: flex-start; /* 真ん中ではなく上から並べる */
-            padding-top: 10px;
+            justify-content: flex-start;
+            padding-top: 20px;
         }
 
-        #menuHeader { text-align: center; margin-bottom: 5px; }
-        #menuTitle { color: #3498db; margin: 0; font-size: 22px; }
-        .best-info { font-weight: bold; color: #f1c40f; font-size: 16px; }
+        #menuHeader { text-align: center; margin-bottom: 20px; }
+        #menuTitle { color: #3498db; margin: 0; font-size: 28px; }
+        .best-info { font-weight: bold; color: #f1c40f; font-size: 18px; }
 
-        /* 中央広告：高さをさらに削って160pxに！ */
-        #ad-middle-container {
-            width: 300px; height: 160px; background: #000;
-            margin: 5px 0; display: none;
-            justify-content: center; align-items: center;
-            overflow: hidden;
+        /* 大広告オーバーレイ */
+        #bigAdScreen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .ad-frame-wrapper { width: 90%; height: 80%; position: relative; }
+        .ad-close-btn { 
+            position: absolute; top: -10px; right: -10px; color: white; font-size: 30px; 
+            font-weight: bold; cursor: pointer; background: rgba(0,0,0,0.5); 
+            width: 40px; height: 40px; border-radius: 50%; display: none;
+            align-items: center; justify-content: center; z-index: 2100;
         }
         
-        /* ボタン群：間隔を極限まで詰める */
-        .btn-group {
-            display: flex; flex-direction: column; align-items: center;
-            width: 100%; gap: 5px; /* ボタン同士の隙間を5pxに固定 */
-        }
-
+        .btn-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 15px; margin-top: 20px; }
         #goButton {
-            padding: 10px 0; font-size: 18px; background: #3498db; border: none;
+            padding: 15px 0; font-size: 20px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            width: 220px; box-shadow: 0 4px #2980b9;
+            width: 240px; box-shadow: 0 4px #2980b9;
         }
         .link-btn {
-            padding: 8px 0; font-size: 14px; background: #9b59b6;
+            padding: 12px 0; font-size: 16px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
-            text-decoration: none; width: 220px; text-align: center;
+            text-decoration: none; width: 240px; text-align: center;
             box-shadow: 0 4px #8e44ad;
         }
     </style>
 </head>
 <body>
 
-    <div id="ad-top"><iframe src="ad.html"></iframe></div>
+    <div id="ad-top"><iframe id="ifr-top" src="ad.html?pos=top"></iframe></div>
 
     <div id="game-outer">
         <div id="ui" style="position:absolute; top:10px; width:100%; text-align:center; color:white; font-weight:bold; pointer-events:none; z-index:20;">SCORE: 0</div>
@@ -89,25 +90,37 @@
                 <div class="best-info">BEST: <span id="best-ui">0</span></div>
             </div>
 
-            <div id="ad-middle-container">
-                <script src="https://adm.shinobi.jp/s/1e6de436ea850948e238e975a93767eb"></script>
-            </div>
-
             <div class="btn-group">
                 <button id="goButton">START GAME</button>
                 <a href="https://saaaachi.github.io/" class="link-btn">他のゲームはこちら</a>
             </div>
         </div>
+
+        <div id="bigAdScreen">
+            <div class="ad-frame-wrapper">
+                <div id="ad-close-btn" class="ad-close-btn" onclick="closeAd()">×</div>
+                <iframe id="ad-large-frame" src="" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+        </div>
     </div>
 
-    <div id="ad-bottom"><iframe src="ad.html"></iframe></div>
+    <div id="ad-bottom"><iframe id="ifr-bottom" src="ad.html?pos=bottom"></iframe></div>
 
     <script>
+        // --- 広告30秒自動更新タイマー ---
+        setInterval(() => {
+            const topAd = document.getElementById('ifr-top');
+            const bottomAd = document.getElementById('ifr-bottom');
+            const now = Date.now();
+            if(topAd) topAd.src = 'ad.html?pos=top&t=' + now;
+            if(bottomAd) bottomAd.src = 'ad.html?pos=bottom&t=' + now;
+            console.log("広告を更新しました");
+        }, 30000);
+
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const menuScreen = document.getElementById("menuScreen");
         const menuTitle = document.getElementById("menuTitle");
-        const adMid = document.getElementById("ad-middle-container");
         const bestUi = document.getElementById("best-ui");
         const goButton = document.getElementById("goButton");
         const gameOuter = document.getElementById("game-outer");
@@ -122,7 +135,7 @@
 
         let score = 0, bestScore = localStorage.getItem("blackhole_drop_best") || 0;
         let gameActive = false, player = { x: 0, y: 0, radius: 35, pull: 75 };
-        let items = [], spawnTimer;
+        let items = [], spawnTimer, playCount = 0;
         bestUi.innerText = bestScore;
 
         goButton.onclick = () => {
@@ -185,6 +198,7 @@
         function gameOver() {
             if (!gameActive) return;
             gameActive = false;
+            playCount++; // プレイ回数をカウント
             clearTimeout(spawnTimer);
             gameOuter.style.backgroundColor = "#e74c3c";
             if(score > bestScore) {
@@ -194,15 +208,31 @@
             }
             menuTitle.innerText = "GAME OVER";
             goButton.innerText = "RETRY";
-            adMid.style.display = "flex"; 
-            menuScreen.style.display = "flex";
+            
+            // 2回目以降、5回おきに大広告を出す（Ball Matcher方式）
+            if (playCount === 2 || (playCount > 2 && (playCount - 2) % 5 === 0)) {
+                showBigAd();
+            } else {
+                menuScreen.style.display = "flex";
+            }
         }
 
-        setInterval(() => {
-            document.querySelectorAll('iframe').forEach(f => {
-                const s = f.src; f.src = "about:blank"; setTimeout(() => f.src = s, 100);
-            });
-        }, 30000);
+        // --- 大広告システム ---
+        function showBigAd() {
+            const screen = document.getElementById("bigAdScreen");
+            const closeBtn = document.getElementById("ad-close-btn");
+            const frame = document.getElementById("ad-large-frame");
+            frame.src = "ad.large.html?t=" + Date.now();
+            screen.style.display = "flex";
+            closeBtn.style.display = "none";
+            setTimeout(() => { closeBtn.style.display = "flex"; }, 5000); // 5秒後に閉じるボタン
+        }
+
+        function closeAd() {
+            document.getElementById("bigAdScreen").style.display = "none";
+            document.getElementById("ad-large-frame").src = "";
+            menuScreen.style.display = "flex";
+        }
     </script>
 </body>
 </html>
