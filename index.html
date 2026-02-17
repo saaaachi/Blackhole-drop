@@ -12,46 +12,45 @@
             position: fixed;
         }
 
-        /* 上の広告（100pxに調整） */
-        #ad-top {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100px;
+        /* 広告枠 */
+        #ad-top, #ad-bottom {
+            position: absolute; left: 0; width: 100%; height: 100px;
             background: #000; z-index: 1000;
         }
+        #ad-top { top: 0; }
+        #ad-bottom { bottom: 0; }
 
-        /* 下の広告 */
-        #ad-bottom {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 100px;
-            background: #000; z-index: 1000;
-        }
-
-        /* ゲームエリア：上下100pxずつ空ける */
+        /* ゲームエリア */
         #game-outer {
-            position: absolute;
-            top: 100px; bottom: 100px;
-            left: 0; right: 0;
+            position: absolute; top: 100px; bottom: 100px; left: 0; right: 0;
             background: #34495e; overflow: hidden; z-index: 10;
         }
 
         canvas { display: block; width: 100%; height: 100%; }
         iframe { border: none; width: 100%; height: 100%; }
 
-        /* メニュー画面 */
+        /* メニュー/リザルト画面 */
         #menuScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 50;
+            background: rgba(0,0,0,0.92); z-index: 50;
             display: flex; flex-direction: column; align-items: center;
-            justify-content: flex-start;
-            padding-top: 20px;
+            justify-content: flex-start; padding-top: 20px;
         }
 
-        #menuHeader { text-align: center; margin-bottom: 20px; }
+        #menuHeader { text-align: center; margin-bottom: 10px; }
         #menuTitle { color: #3498db; margin: 0; font-size: 28px; }
         .best-info { font-weight: bold; color: #f1c40f; font-size: 18px; }
+
+        /* リザルト用の中サイズ広告エリア */
+        #mid-ad-box {
+            width: 300px; height: 250px; background: #222; margin: 15px 0;
+            display: flex; align-items: center; justify-content: center;
+        }
 
         /* 大広告オーバーレイ */
         #bigAdScreen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 2000;
+            background: #000; z-index: 2000;
             display: none; justify-content: center; align-items: center;
         }
         .ad-frame-wrapper { width: 90%; height: 80%; position: relative; }
@@ -62,12 +61,14 @@
             align-items: center; justify-content: center; z-index: 2100;
         }
         
-        .btn-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 15px; margin-top: 20px; }
+        .btn-group { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 12px; }
         #goButton {
             padding: 15px 0; font-size: 20px; background: #3498db; border: none;
             border-radius: 50px; color: white; font-weight: bold; cursor: pointer;
-            width: 240px; box-shadow: 0 4px #2980b9;
+            width: 240px; box-shadow: 0 4px #2980b9; transition: opacity 0.3s;
         }
+        #goButton:disabled { background: #7f8c8d; box-shadow: 0 4px #95a5a6; opacity: 0.6; cursor: default; }
+        
         .link-btn {
             padding: 12px 0; font-size: 16px; background: #9b59b6;
             border: none; border-radius: 50px; color: white; font-weight: bold;
@@ -90,6 +91,13 @@
                 <div class="best-info">BEST: <span id="best-ui">0</span></div>
             </div>
 
+            <div id="mid-ad-box">
+                <div id="im-8b988d7b042a42d5b8df6921b628cf00">
+                    <script async src="https://imp-adedge.i-mobile.co.jp/script/v1/spot.js?20220104"></script>
+                    <script>(window.adsbyimobile=window.adsbyimobile||[]).push({pid:84561,mid:590804,asid:1924211,type:"banner",display:"inline",elementid:"im-8b988d7b042a42d5b8df6921b628cf00"})</script>
+                </div>
+            </div>
+
             <div class="btn-group">
                 <button id="goButton">START GAME</button>
                 <a href="https://saaaachi.github.io/" class="link-btn">他のゲームはこちら</a>
@@ -107,14 +115,11 @@
     <div id="ad-bottom"><iframe id="ifr-bottom" src="ad.html?pos=bottom"></iframe></div>
 
     <script>
-        // --- 広告30秒自動更新タイマー ---
+        // --- 広告自動更新 ---
         setInterval(() => {
-            const topAd = document.getElementById('ifr-top');
-            const bottomAd = document.getElementById('ifr-bottom');
             const now = Date.now();
-            if(topAd) topAd.src = 'ad.html?pos=top&t=' + now;
-            if(bottomAd) bottomAd.src = 'ad.html?pos=bottom&t=' + now;
-            console.log("広告を更新しました");
+            document.getElementById('ifr-top').src = 'ad.html?pos=top&t=' + now;
+            document.getElementById('ifr-bottom').src = 'ad.html?pos=bottom&t=' + now;
         }, 30000);
 
         const canvas = document.getElementById("gameCanvas");
@@ -154,8 +159,7 @@
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             player.x = clientX - rect.left;
-            if(player.x < player.radius) player.x = player.radius;
-            if(player.x > canvas.width - player.radius) player.x = canvas.width - player.radius;
+            player.x = Math.max(player.radius, Math.min(canvas.width - player.radius, player.x));
         }
 
         canvas.addEventListener("touchmove", (e) => { e.preventDefault(); handleMove(e); }, {passive: false});
@@ -174,6 +178,8 @@
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // プレイヤー描画
             ctx.fillStyle = "#2980b9";
             ctx.beginPath(); ctx.ellipse(player.x, player.y, player.radius + 10, player.radius / 2, 0, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = "#1e374d";
@@ -184,6 +190,7 @@
                 it.y += it.speed;
                 ctx.fillStyle = it.type === "coin" ? "#f1c40f" : "#c0392b";
                 ctx.beginPath(); ctx.arc(it.x, it.y, it.size, 0, Math.PI * 2); ctx.fill();
+                
                 let dx = player.x - it.x, dy = player.y - it.y;
                 let dist = Math.sqrt(dx * dx + dy * dy);
                 if(dist < player.pull) {
@@ -198,26 +205,33 @@
         function gameOver() {
             if (!gameActive) return;
             gameActive = false;
-            playCount++; // プレイ回数をカウント
+            playCount++;
             clearTimeout(spawnTimer);
             gameOuter.style.backgroundColor = "#e74c3c";
+            
             if(score > bestScore) {
                 bestScore = score;
                 localStorage.setItem("blackhole_drop_best", bestScore);
                 bestUi.innerText = bestScore;
             }
-            menuTitle.innerText = "GAME OVER";
-            goButton.innerText = "RETRY";
             
-            // 2回目以降、5回おきに大広告を出す（Ball Matcher方式）
+            menuTitle.innerText = "GAME OVER";
+            goButton.innerText = "お待ちください...";
+            goButton.disabled = true;
+            
+            // 大広告の判定
             if (playCount === 2 || (playCount > 2 && (playCount - 2) % 5 === 0)) {
                 showBigAd();
             } else {
                 menuScreen.style.display = "flex";
+                // リトライボタンを少し遅れて表示（広告を見せる）
+                setTimeout(() => {
+                    goButton.disabled = false;
+                    goButton.innerText = "RETRY";
+                }, 1500);
             }
         }
 
-        // --- 大広告システム ---
         function showBigAd() {
             const screen = document.getElementById("bigAdScreen");
             const closeBtn = document.getElementById("ad-close-btn");
@@ -225,13 +239,17 @@
             frame.src = "ad.large.html?t=" + Date.now();
             screen.style.display = "flex";
             closeBtn.style.display = "none";
-            setTimeout(() => { closeBtn.style.display = "flex"; }, 5000); // 5秒後に閉じるボタン
+            setTimeout(() => { closeBtn.style.display = "flex"; }, 5000);
         }
 
         function closeAd() {
             document.getElementById("bigAdScreen").style.display = "none";
             document.getElementById("ad-large-frame").src = "";
             menuScreen.style.display = "flex";
+            setTimeout(() => {
+                goButton.disabled = false;
+                goButton.innerText = "RETRY";
+            }, 500);
         }
     </script>
 </body>
