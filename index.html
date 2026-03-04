@@ -115,12 +115,6 @@
     <div id="ad-bottom"><iframe id="ifr-bottom" src="ad.html?pos=bottom"></iframe></div>
 
     <script>
-        // --- 広告自動更新 ---
-        setInterval(() => {
-            const now = Date.now();
-            document.getElementById('ifr-top').src = 'ad.html?pos=top&t=' + now;
-            document.getElementById('ifr-bottom').src = 'ad.html?pos=bottom&t=' + now;
-        }, 30000);
 
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
